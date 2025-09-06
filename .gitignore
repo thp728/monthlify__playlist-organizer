@@ -1,1 +1,27 @@
+# --- General Ignored Files ---
+.DS_Store
 .env
+.env.local
+
+# --- Python / Backend specific ---
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+.flaskenv
+
+# --- Node / Frontend specific ---
+# Next.js build output
+.next/
+out/
+
+# Dependency directories
+node_modules/
+
+# IDE files
+.vscode/
+
+# Logs and temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
