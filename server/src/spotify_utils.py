@@ -77,3 +77,25 @@ def add_tracks_to_playlist(sp_client, playlist_id, track_uris):
     for i in range(0, len(track_uris), 100):
         batch = track_uris[i : i + 100]
         sp_client.playlist_add_items(playlist_id, batch)
+
+
+def get_all_playlist_tracks(sp_client, playlist_url):
+    """
+    Fetches all tracks from a given playlist, handling pagination.
+    Returns a list of all tracks.
+    """
+    # The playlist_url needs to be converted to a playlist ID
+    try:
+        playlist_id = playlist_url.split("/")[-1].split("?")[0]
+    except IndexError:
+        raise ValueError("Invalid Spotify playlist URL.")
+
+    results = sp_client.playlist_items(playlist_id, limit=100)
+    tracks = results["items"]
+
+    # Check for more songs to fetch
+    while results["next"]:
+        results = sp_client.next(results)
+        tracks.extend(results["items"])
+
+    return tracks

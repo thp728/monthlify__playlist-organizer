@@ -103,12 +103,19 @@ def get_liked_songs():
 @app.route("/api/monthlify/run", methods=["POST"])
 def run_monthlify():
     """
-    Orchestrates the creation of monthly playlists from a user's liked songs.
+    Orchestrates the creation of monthly playlists from a user-provided playlist URL.
     The access token should be provided in the Authorization header.
+    The playlist URL should be in the request body.
     """
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return jsonify({"error": "Authorization header is missing."}), 401
+
+    data = request.get_json()
+    if not data or "playlist_url" not in data:
+        return jsonify({"error": "Playlist URL is missing from the request body."}), 400
+
+    playlist_url = data["playlist_url"]
 
     try:
         token_info = {
@@ -119,28 +126,28 @@ def run_monthlify():
         user_info = sp.me()
         user_id = user_info["id"]
 
-        # Step 1: Get all liked songs
-        print("Fetching all liked songs...")
-        all_liked_songs = spotify_utils.get_all_liked_songs(sp)
-        print(f"Found {len(all_liked_songs)} liked songs.")
+        # Step 1: Get tracks from the provided playlist URL
+        print(f"Fetching songs from the playlist: {playlist_url}...")
+        all_songs = spotify_utils.get_all_playlist_tracks(sp, playlist_url)
+        print(f"Found {len(all_songs)} songs.")
 
-        # Step 2: Organize songs by month
+        # Step 2: Organize songs by month of addition
         monthly_songs = {}
-        for item in all_liked_songs:
+        for item in all_songs:
             added_at = item["added_at"]
-            # Format the date to get 'YYYY-MM'
             month_key = added_at[:7]
 
             if month_key not in monthly_songs:
                 monthly_songs[month_key] = []
 
+            # We need the track URI to add it to a new playlist
             monthly_songs[month_key].append(item["track"]["uri"])
 
         # Step 3: Create playlists and add songs for each month
         for month_key, track_uris in monthly_songs.items():
             year, month = month_key.split("-")
             month_name = get_month_name(int(month))
-            playlist_name = f"Liked Songs - {month_name} {year}"
+            playlist_name = f"Monthly - {month_name} {year}"
 
             print(f"Processing playlist for: {playlist_name}")
 
