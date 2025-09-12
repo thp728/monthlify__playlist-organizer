@@ -123,7 +123,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
           onClick={handleMonthlify}
           disabled={!selectedPlaylistId && urlInput.trim() === ""}
         >
-          Get Preview of Monthly Playlists
+          Preview Monthly Playlists
         </Button>
       </div>
     </div>
