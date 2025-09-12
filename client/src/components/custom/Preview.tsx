@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Song {
   id: string;
@@ -34,12 +34,15 @@ export function Preview({ userPlaylists }: PreviewProps) {
   const [activePlaylist, setActivePlaylist] = useState<PlaylistDetail | null>(
     null
   );
+  const router = useRouter();
 
   const handlePlaylistClick = (playlistId: string) => {};
 
   const createPlaylists = () => {};
 
-  const changeMasterPlaylist = () => {};
+  const changeMasterPlaylist = () => {
+    router.push("/dashboard");
+  };
 
   const onPlaylistClick = (id: string) => {
     const playlist = userPlaylists.find((pl) => pl.id === id) || null;
