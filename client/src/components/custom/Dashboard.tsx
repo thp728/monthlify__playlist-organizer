@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlaylistCard } from "./PlaylistCard";
 import LoadingSpinner from "./LoadingSpinner";
 import { Input } from "../ui/input";
+import { useRouter } from "next/navigation";
+import { PlaylistGrid } from "./PlaylistGrid";
 
 interface Playlist {
   id: string;
@@ -21,6 +22,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
     null
   );
   const [urlInput, setUrlInput] = useState<string>("");
+  const router = useRouter();
 
   const handleUrlInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrlInput(e.target.value);
@@ -32,10 +34,8 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
 
   const handlePlaylistClick = (playlistId: string) => {
     if (selectedPlaylistId === playlistId) {
-      // If the same playlist is clicked, deselect it
       setSelectedPlaylistId(null);
     } else {
-      // Otherwise, select the new playlist and clear the URL input
       setSelectedPlaylistId(playlistId);
       setUrlInput("");
     }
@@ -66,6 +66,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
       setProgress(currentProgress);
       if (currentProgress >= 100) {
         clearInterval(progressInterval);
+        router.push("/dashboard/preview");
         setIsProcessing(false);
         console.log("Playlist creation complete!");
       }
@@ -86,18 +87,12 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
       </h3>
 
       <div className="flex flex-col flex-grow justify-between items-center">
-        {/* Playlist cards */}
-        <div className="grid grid-cols-6 gap-4 overflow-y-auto p-5">
-          {userPlaylists.map((playlist) => (
-            <PlaylistCard
-              key={playlist.id}
-              playlistName={playlist.name}
-              albumCoverUrl={playlist.imageUrl}
-              onClick={() => handlePlaylistClick(playlist.id)}
-              isSelected={selectedPlaylistId === playlist.id}
-            />
-          ))}
-        </div>
+        {/* Playlist Grid */}
+        <PlaylistGrid
+          playlists={userPlaylists}
+          selectedPlaylistId={selectedPlaylistId}
+          onPlaylistClick={handlePlaylistClick}
+        />
 
         {/* Separator */}
         <div className="flex items-center w-5/6 my-4">
