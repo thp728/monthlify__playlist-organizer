@@ -8,9 +8,10 @@ import { Playlist } from "@/models/playlist";
 
 interface DashboardProps {
   userPlaylists: Playlist[];
+  userName: string | null;
 }
 
-export function Dashboard({ userPlaylists }: DashboardProps) {
+export function Dashboard({ userPlaylists, userName }: DashboardProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
@@ -76,7 +77,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <div className="text-center mb-2">
         <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Welcome, [users name]!
+          Welcome, {userName}!
         </h2>
         <p className="mt-4 text-lg text-gray-600">
           To get started, please choose a playlist to &apos;Monthlify&apos; from

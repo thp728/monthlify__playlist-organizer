@@ -210,6 +210,88 @@ def run_monthlify():
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 
+@app.route("/api/spotify/playlists", methods=["GET"])
+def get_user_playlists():
+    """
+    Fetches all of the user's playlists, including liked songs.
+    The access token should be provided in the spotify_access_token cookie.
+    """
+    access_token = request.cookies.get("spotify_access_token")
+
+    if not access_token:
+        # If the access token is missing from the cookie, it's an unauthorized request
+        return jsonify({"error": "Authorization cookie is missing."}), 401
+
+    try:
+        token_info = {
+            "access_token": access_token,
+        }
+
+        sp = spotify_utils.create_spotify_client(token_info)
+
+        # Get all playlists and liked songs separately
+        playlists = spotify_utils.get_all_user_playlists(sp)
+        liked_songs_playlist = spotify_utils.get_liked_songs_as_playlist(sp)
+
+        # Combine the lists and place liked songs at the top
+        all_playlists = [liked_songs_playlist] + playlists
+
+        # Return a simplified list for the frontend
+        playlists_data = [
+            {
+                "id": p["id"],
+                "name": p["name"],
+                "owner": p["owner"]["display_name"],
+                "track_count": p["tracks"]["total"],
+                "image_url": p["images"][0]["url"] if p["images"] else None,
+            }
+            for p in all_playlists
+        ]
+
+        return jsonify({"playlists": playlists_data})
+
+    except spotipy.exceptions.SpotifyException as e:
+        print(f"Spotify API Error: {e}")
+        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
+@app.route("/api/spotify/user", methods=["GET"])
+def get_user_profile():
+    """
+    Fetches the profile information for the authenticated user.
+    The access token should be provided in the spotify_access_token cookie.
+    """
+    access_token = request.cookies.get("spotify_access_token")
+
+    if not access_token:
+        return jsonify({"error": "Authorization cookie is missing."}), 401
+
+    try:
+        sp = spotipy.Spotify(auth=access_token)
+        user_info = sp.me()
+
+        # We'll return a simplified user object
+        user_data = {
+            "id": user_info["id"],
+            "name": user_info["display_name"],
+            "profile_image_url": (
+                user_info["images"][0]["url"] if user_info["images"] else None
+            ),
+        }
+
+        return jsonify(user_data), 200
+
+    except spotipy.exceptions.SpotifyException as e:
+        print(f"Spotify API Error: {e}")
+        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
 def get_month_name(month_number):
     """
     Helper function to convert a month number to a month name.
