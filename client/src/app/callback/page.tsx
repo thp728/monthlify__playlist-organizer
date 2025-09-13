@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import LoadingSpinner from "@/components/custom/LoadingSpinner";
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -46,11 +46,8 @@ export default function CallbackPage() {
   }, [searchParams, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center space-y-2 p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="text-gray-600 dark:text-gray-400">Logging you in...</p>
-      </div>
+    <div className="h-full flex flex-col justify-center items-center">
+      <LoadingSpinner loadingText="Logging you in..." />;
     </div>
   );
 }

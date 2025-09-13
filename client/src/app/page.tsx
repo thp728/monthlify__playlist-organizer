@@ -30,8 +30,12 @@ export default function HomePage() {
   };
 
   return (
-    <main className="h-screen flex justify-center items-center bg-gray-50 p-10">
-      {isLoading ? <LoadingSpinner /> : <HeroSection onLogin={handleLogin} />}
-    </main>
+    <div className="h-full flex flex-col justify-center items-center">
+      {isLoading ? (
+        <LoadingSpinner loadingText="Logging you in..." />
+      ) : (
+        <HeroSection onLogin={handleLogin} />
+      )}
+    </div>
   );
 }

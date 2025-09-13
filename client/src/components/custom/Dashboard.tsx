@@ -4,12 +4,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import { Input } from "../ui/input";
 import { useRouter } from "next/navigation";
 import { PlaylistGrid } from "./PlaylistGrid";
-
-interface Playlist {
-  id: string;
-  name: string;
-  imageUrl: string;
-}
+import { Playlist } from "@/models/playlist";
 
 interface DashboardProps {
   userPlaylists: Playlist[];
@@ -74,17 +69,20 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
   };
 
   return isProcessing ? (
-    <div className="w-full h-full flex justify-center items-center">
-      <LoadingSpinner />
+    <div className="w-full min-h-screen flex justify-center items-center">
+      <LoadingSpinner loadingText="Generating preview..." />
     </div>
   ) : (
-    <div className="bg-white p-3 rounded-lg shadow-lg w-full h-full text-center flex flex-col justify-center items-center">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-        Welcome User!
-      </h2>
-      <h3 className="text-lg font-medium text-gray-700 mb-1">
-        Select a playlist to monthlify
-      </h3>
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <div className="text-center mb-2">
+        <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+          Welcome, [users name]!
+        </h2>
+        <p className="mt-4 text-lg text-gray-600">
+          To get started, please choose a playlist to &apos;Monthlify&apos; from
+          the list below, or enter a playlist URL.
+        </p>
+      </div>
 
       <div className="flex flex-col flex-grow justify-between items-center">
         {/* Playlist Grid */}
@@ -92,6 +90,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
           playlists={userPlaylists}
           selectedPlaylistId={selectedPlaylistId}
           onPlaylistClick={handlePlaylistClick}
+          isSearchEnabled={true}
         />
 
         {/* Separator */}

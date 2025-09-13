@@ -1,22 +1,11 @@
 "use client";
 
 import { Preview } from "@/components/custom/Preview";
-
-interface Song {
-  id: string;
-  name: string;
-  artist: string;
-}
-
-interface PlaylistDetail {
-  id: string;
-  name: string;
-  imageUrl: string;
-  songs: Song[];
-}
+import { PlaylistDetail } from "@/models/playlistDetail";
+import { Track } from "@/models/track";
 
 export default function PreviewPage() {
-  const dummySongs: Song[] = [
+  const dummySongs: Track[] = [
     { id: "1", name: "Midnight Drive", artist: "Neon Waves" },
     { id: "2", name: "Lost in Echoes", artist: "Crystal Skies" },
     { id: "3", name: "Golden Horizon", artist: "Aurora Lights" },
@@ -35,39 +24,58 @@ export default function PreviewPage() {
       name: "January",
       imageUrl: imgUrl,
       songs: dummySongs,
+      numberOfSongs: 10,
     },
     {
       id: "2",
       name: "February",
       imageUrl: imgUrl,
       songs: dummySongs,
+      numberOfSongs: 10,
     },
     {
       id: "3",
       name: "March",
       imageUrl: imgUrl,
       songs: dummySongs,
+      numberOfSongs: 10,
     },
     {
       id: "4",
       name: "April",
       imageUrl: imgUrl,
       songs: dummySongs,
+      numberOfSongs: 10,
     },
-    { id: "5", name: "May", imageUrl: imgUrl, songs: dummySongs },
-    { id: "6", name: "June", imageUrl: imgUrl, songs: dummySongs },
-    { id: "7", name: "July", imageUrl: imgUrl, songs: dummySongs },
+    {
+      id: "5",
+      name: "May",
+      imageUrl: imgUrl,
+      songs: dummySongs,
+      numberOfSongs: 10,
+    },
+    {
+      id: "6",
+      name: "June",
+      imageUrl: imgUrl,
+      songs: dummySongs,
+      numberOfSongs: 10,
+    },
+    {
+      id: "7",
+      name: "July",
+      imageUrl: imgUrl,
+      songs: dummySongs,
+      numberOfSongs: 10,
+    },
     {
       id: "8",
       name: "August",
       imageUrl: imgUrl,
       songs: dummySongs,
+      numberOfSongs: 10,
     },
   ];
 
-  return (
-    <main className="h-full flex justify-center items-center bg-gray-50 m-5">
-      <Preview userPlaylists={userPlaylists} />
-    </main>
-  );
+  return <Preview userPlaylists={userPlaylists} />;
 }

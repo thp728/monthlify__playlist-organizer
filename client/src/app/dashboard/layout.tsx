@@ -9,8 +9,8 @@ export default function DashboardLayout({
   return (
     <section>
       {/* Include your header component here */}
-      <header className="bg-gray-50 px-5 py-1 flex justify-between">
-        <h1 className="text-xl">Monthlify</h1>
+      <header className="flex w-full items-center justify-between bg-white p-4">
+        <h1 className="text-xl font-bold tracking-tight">Monthlify</h1>
         <LogoutButton />
       </header>
 
