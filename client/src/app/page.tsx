@@ -3,32 +3,35 @@
 import { useState } from "react";
 import { HeroSection } from "@/components/custom/HeroSection";
 import LoadingSpinner from "@/components/custom/LoadingSpinner";
-import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setIsLoading(true);
-    // In a real app, this would redirect to the Spotify auth URL.
-    setTimeout(() => {
-      setIsLoggedIn(true);
+    try {
+      const response = await fetch("http://127.0.0.1:3000/api/auth/login", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (data.auth_url) {
+        // Redirect the user to the Spotify authorization page
+        window.location.href = data.auth_url;
+      } else {
+        console.error("Failed to get auth URL from backend.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error during login process:", error);
       setIsLoading(false);
-      router.push("/dashboard");
-    }, 1000);
+    }
   };
 
   return (
     <main className="h-screen flex justify-center items-center bg-gray-50 p-10">
-      {!isLoggedIn ? (
-        isLoading ? (
-          <LoadingSpinner />
-        ) : (
-          <HeroSection onLogin={handleLogin} />
-        )
-      ) : null}
+      {isLoading ? <LoadingSpinner /> : <HeroSection onLogin={handleLogin} />}
     </main>
   );
 }

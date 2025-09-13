@@ -66,7 +66,7 @@ export default function PreviewPage() {
   ];
 
   return (
-    <main className="h-screen flex justify-center items-center bg-gray-50 p-10">
+    <main className="h-full flex justify-center items-center bg-gray-50 m-5">
       <Preview userPlaylists={userPlaylists} />
     </main>
   );

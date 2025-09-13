@@ -42,7 +42,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <main className="h-screen flex justify-center items-center bg-gray-50 p-10">
+    <main className="h-full flex justify-center items-center bg-gray-50 m-5">
       <Dashboard userPlaylists={userPlaylists} />
     </main>
   );

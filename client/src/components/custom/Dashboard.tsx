@@ -78,7 +78,7 @@ export function Dashboard({ userPlaylists }: DashboardProps) {
       <LoadingSpinner />
     </div>
   ) : (
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full h-full text-center flex flex-col justify-center items-center">
+    <div className="bg-white p-3 rounded-lg shadow-lg w-full h-full text-center flex flex-col justify-center items-center">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Welcome User!
       </h2>

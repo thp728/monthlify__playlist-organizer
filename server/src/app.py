@@ -1,12 +1,13 @@
-# monthlify/server/src/app.py
-
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 import os
+from flask_cors import CORS
 from . import spotify_utils, auth
 
 import spotipy
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
+
 
 # Load configuration from a .env file or environment variables
 # For now, we will add these directly.
@@ -39,10 +40,6 @@ def spotify_login():
 
 @app.route("/api/auth/callback", methods=["GET"])
 def spotify_callback():
-    """
-    Handles the callback from Spotify after the user logs in.
-    Exchanges the authorization code for an access token.
-    """
     code = request.args.get("code")
     if not code:
         return jsonify({"error": "No authorization code provided."}), 400
@@ -54,12 +51,60 @@ def spotify_callback():
             redirect_uri=app.config["SPOTIFY_REDIRECT_URI"],
             code=code,
         )
-        # Here you would store the token_info securely,
-        # perhaps in a session or a database.
-        # For this example, we'll just return it.
-        return jsonify(token_info)
+
+        resp = make_response(jsonify({"message": "Authentication successful."}))
+
+        # Access token (short-lived)
+        resp.set_cookie(
+            "spotify_access_token",
+            token_info["access_token"],
+            httponly=True,
+            secure=True,  # set to False for local HTTP dev
+            samesite="None",  # required for cross-origin (3000 -> 5000)
+            max_age=token_info.get("expires_in", 3600),
+        )
+
+        # Refresh token (long-lived)
+        resp.set_cookie(
+            "spotify_refresh_token",
+            token_info["refresh_token"],
+            httponly=True,
+            secure=True,
+            samesite="None",
+            max_age=60 * 60 * 24 * 30,  # 30 days
+        )
+
+        return resp, 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/auth/logout", methods=["POST"])
+def logout():
+    resp = make_response(jsonify({"message": "Logged out"}))
+
+    # Clear access token cookie
+    resp.set_cookie(
+        "spotify_access_token",
+        "",
+        httponly=True,
+        secure=True,  # or False in local dev
+        samesite="None",
+        max_age=0,  # expire immediately
+    )
+
+    # Clear refresh token cookie
+    resp.set_cookie(
+        "spotify_refresh_token",
+        "",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        max_age=0,
+    )
+
+    return resp, 200
 
 
 @app.route("/api/spotify/liked-songs", methods=["GET"])
