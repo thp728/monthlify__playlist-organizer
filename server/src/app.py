@@ -292,6 +292,48 @@ def get_user_profile():
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 
+@app.route("/api/preview", methods=["POST"])
+def preview_playlist():
+    """
+    Fetches a preview of monthly playlists from a given Spotify playlist URL, ID, or liked songs.
+    The access token is retrieved from the spotify_access_token cookie.
+    """
+    access_token = request.cookies.get("spotify_access_token")
+
+    if not access_token:
+        return jsonify({"error": "Authorization cookie is missing."}), 401
+
+    try:
+        sp = spotipy.Spotify(auth=access_token)
+        data = request.get_json()
+        identifier = data.get("identifier")
+        identifier_type = data.get("type")
+
+        if not identifier:
+            return jsonify({"error": "Playlist identifier is required"}), 400
+
+        if identifier_type == "id":
+            if identifier == "liked-songs":
+                preview_data = spotify_utils.get_monthly_previews_from_liked_songs(sp)
+            else:
+                preview_data = spotify_utils.get_monthly_previews_from_id(
+                    sp, identifier
+                )
+        elif identifier_type == "url":
+            preview_data = spotify_utils.get_monthly_previews_from_url(sp, identifier)
+        else:
+            return jsonify({"error": "Invalid identifier type"}), 400
+
+        return jsonify({"preview_data": preview_data}), 200
+
+    except spotipy.exceptions.SpotifyException as e:
+        print(f"Spotify API Error: {e}")
+        return jsonify({"error": "Spotify API Error: " + str(e)}), 401
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
 def get_month_name(month_number):
     """
     Helper function to convert a month number to a month name.

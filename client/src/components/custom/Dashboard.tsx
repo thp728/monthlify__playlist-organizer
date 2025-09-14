@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "./LoadingSpinner";
 import { Input } from "../ui/input";
-import { useRouter } from "next/navigation";
 import { PlaylistGrid } from "./PlaylistGrid";
 import { Playlist } from "@/models/playlist";
+import { useRouter } from "next/navigation";
 
 interface DashboardProps {
   userPlaylists: Playlist[];
@@ -13,7 +13,6 @@ interface DashboardProps {
 
 export function Dashboard({ userPlaylists, userName }: DashboardProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null
   );
@@ -37,7 +36,7 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
     }
   };
 
-  const handleMonthlify = () => {
+  const handlePreview = () => {
     let playlistIdentifier: string | null = null;
     let identifierType: "id" | "url" | null = null;
 
@@ -52,26 +51,18 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
       return;
     }
 
-    // Now, you can use playlistIdentifier and identifierType to make your API call
-    console.log(`Processing ${identifierType}: ${playlistIdentifier}`);
+    const queryParams = new URLSearchParams({
+      identifier: playlistIdentifier,
+      type: identifierType,
+    }).toString();
 
-    setIsProcessing(true);
-    let currentProgress = 0;
-    const progressInterval = setInterval(() => {
-      currentProgress += 10;
-      setProgress(currentProgress);
-      if (currentProgress >= 100) {
-        clearInterval(progressInterval);
-        router.push("/dashboard/preview");
-        setIsProcessing(false);
-        console.log("Playlist creation complete!");
-      }
-    }, 300);
+    // Redirect to the preview page with the identifier in the URL
+    router.push(`/dashboard/preview?${queryParams}`);
   };
 
   return isProcessing ? (
     <div className="w-full min-h-screen flex justify-center items-center">
-      <LoadingSpinner loadingText="Generating preview..." />
+      <LoadingSpinner loadingText="Loading..." />
     </div>
   ) : (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -115,7 +106,7 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
         </div>
 
         <Button
-          onClick={handleMonthlify}
+          onClick={handlePreview}
           disabled={!selectedPlaylistId && urlInput.trim() === ""}
         >
           Preview Monthly Playlists

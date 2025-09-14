@@ -1,81 +1,124 @@
 "use client";
 
 import { Preview } from "@/components/custom/Preview";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import LoadingSpinner from "@/components/custom/LoadingSpinner";
 import { PlaylistDetail } from "@/models/playlistDetail";
 import { Track } from "@/models/track";
 
-export default function PreviewPage() {
-  const dummySongs: Track[] = [
-    { id: "1", name: "Midnight Drive", artist: "Neon Waves" },
-    { id: "2", name: "Lost in Echoes", artist: "Crystal Skies" },
-    { id: "3", name: "Golden Horizon", artist: "Aurora Lights" },
-    { id: "4", name: "Falling Stars", artist: "Velvet Dreams" },
-    { id: "5", name: "City Lights", artist: "The Night Owls" },
-    { id: "6", name: "Wandering Soul", artist: "Echo Valley" },
-    { id: "7", name: "Summer Breeze", artist: "Coastal Waves" },
-    { id: "8", name: "Silent Whispers", artist: "Moonlit Echo" },
-    { id: "9", name: "Electric Pulse", artist: "Skyline Beats" },
-    { id: "10", name: "Beyond the Horizon", artist: "Nova Trails" },
-  ];
-  const imgUrl = "https://placehold.co/400x400/png";
-  const userPlaylists: PlaylistDetail[] = [
-    {
-      id: "1",
-      name: "January",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "2",
-      name: "February",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "3",
-      name: "March",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "4",
-      name: "April",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "5",
-      name: "May",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "6",
-      name: "June",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "7",
-      name: "July",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-    {
-      id: "8",
-      name: "August",
-      imageUrl: imgUrl,
-      songs: dummySongs,
-      numberOfSongs: 10,
-    },
-  ];
+interface PreviewTrack {
+  name: string;
+  artists: string;
+  added_at: string;
+}
 
-  return <Preview userPlaylists={userPlaylists} />;
+interface PreviewMonthlyPlaylist {
+  id: number;
+  name: string;
+  tracks: PreviewTrack[];
+}
+
+interface PreviewResponse {
+  preview_data: PreviewMonthlyPlaylist[];
+}
+
+interface ErrorResponse {
+  error: string;
+}
+
+export default function PreviewPage() {
+  const [previewData, setPreviewData] = useState<
+    PreviewMonthlyPlaylist[] | null
+  >(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [previewPlaylists, setPreviewPlaylists] = useState<PlaylistDetail[]>(
+    []
+  );
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const identifier = searchParams.get("identifier");
+    const type = searchParams.get("type");
+
+    if (!identifier || !type) {
+      router.push("/dashboard");
+      return;
+    }
+
+    const fetchPreviewData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("http://127.0.0.1:3000/api/preview", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ identifier, type }),
+        });
+
+        if (!response.ok) {
+          const errorData: ErrorResponse = await response.json();
+          throw new Error(
+            errorData.error || "Failed to fetch playlist preview."
+          );
+        }
+
+        const successData = await response.json();
+        const data: PreviewResponse = successData;
+        setPreviewData(data.preview_data);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+          console.error(err);
+        } else {
+          setError("An unknown error occurred.");
+          console.error(err);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreviewData();
+  }, [searchParams, router, error]);
+
+  useEffect(() => {
+    if (previewData) {
+      const transformedPlaylists: PlaylistDetail[] = previewData.map(
+        (monthlyPlaylist) => {
+          // Transform the tracks to the new `Track` format
+          const songs: Track[] = monthlyPlaylist.tracks.map((track, index) => ({
+            id: `${monthlyPlaylist.id}-${index}`, // Create a unique ID for each song
+            name: track.name,
+            artist: track.artists,
+            addedAt: track.added_at,
+          }));
+
+          // Transform the monthly playlist to the new `PlaylistDetail` format
+          return {
+            id: monthlyPlaylist.id.toString(),
+            name: monthlyPlaylist.name,
+            imageUrl: "https://placehold.co/400x400/png",
+            songs: songs,
+            numberOfSongs: songs.length,
+          };
+        }
+      );
+      setPreviewPlaylists(transformedPlaylists);
+    }
+  }, [previewData]);
+
+  return isLoading ? (
+    <div className="w-full min-h-screen flex justify-center items-center">
+      <LoadingSpinner loadingText="Generating preview..." />
+    </div>
+  ) : (
+    <Preview playlists={previewPlaylists} />
+  );
 }

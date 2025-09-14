@@ -13,10 +13,10 @@ import { useRouter } from "next/navigation";
 import { PlaylistDetail } from "@/models/playlistDetail";
 
 interface PreviewProps {
-  userPlaylists: PlaylistDetail[];
+  playlists: PlaylistDetail[];
 }
 
-export function Preview({ userPlaylists }: PreviewProps) {
+export function Preview({ playlists }: PreviewProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [activePlaylist, setActivePlaylist] = useState<PlaylistDetail | null>(
     null
@@ -30,7 +30,7 @@ export function Preview({ userPlaylists }: PreviewProps) {
   };
 
   const onPlaylistClick = (id: string) => {
-    const playlist = userPlaylists.find((pl) => pl.id === id);
+    const playlist = playlists.find((pl) => pl.id === id);
     setActivePlaylist(playlist || null);
     setOpenDialog(true);
   };
@@ -50,14 +50,14 @@ export function Preview({ userPlaylists }: PreviewProps) {
           Based on your selected playlist, we&apos;ve organized your songs into
           the following monthly playlists. Take a moment to review them.
           Clicking
-          <strong>&apos;Create Playlists&apos;</strong> will add them to your
+          <strong> &apos;Create Playlists&apos;</strong> will add them to your
           Spotify account.
         </p>
       </div>
 
       <div className="flex flex-col items-center">
         <PlaylistGrid
-          playlists={userPlaylists}
+          playlists={playlists}
           selectedPlaylistId={null}
           onPlaylistClick={onPlaylistClick}
           isSearchEnabled={false}
