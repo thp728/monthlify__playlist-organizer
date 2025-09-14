@@ -90,27 +90,43 @@ export default function PreviewPage() {
 
   useEffect(() => {
     if (previewData) {
-      const transformedPlaylists: PlaylistDetail[] = previewData.map(
-        (monthlyPlaylist) => {
-          // Transform the tracks to the new `Track` format
-          const songs: Track[] = monthlyPlaylist.tracks.map((track, index) => ({
-            id: `${monthlyPlaylist.id}-${index}`, // Create a unique ID for each song
-            name: track.name,
-            artist: track.artists,
-            addedAt: track.added_at,
-          }));
+      const generatePreviewPlaylists = async () => {
+        // Use Promise.all to fetch all images concurrently
+        const transformedPlaylistsPromises: Promise<PlaylistDetail>[] =
+          previewData.map(async (monthlyPlaylist) => {
+            // Extract month and year from the playlist name for the URL
+            const nameParts = monthlyPlaylist.name.split(" ");
+            const monthCode = nameParts[0].substring(0, 3);
+            const year = nameParts[1];
 
-          // Transform the monthly playlist to the new `PlaylistDetail` format
-          return {
-            id: monthlyPlaylist.id.toString(),
-            name: monthlyPlaylist.name,
-            imageUrl: "https://placehold.co/400x400/png",
-            songs: songs,
-            numberOfSongs: songs.length,
-          };
-        }
-      );
-      setPreviewPlaylists(transformedPlaylists);
+            // Construct the API URL for the image
+            const imageUrl = `http://127.0.0.1:3000/api/images/cover/${monthCode}/${year}`;
+
+            const songs: Track[] = monthlyPlaylist.tracks.map(
+              (track, index) => ({
+                id: `${monthlyPlaylist.id}-${index}`,
+                name: track.name,
+                artist: track.artists,
+                addedAt: track.added_at,
+              })
+            );
+
+            return {
+              id: monthlyPlaylist.id.toString(),
+              name: monthlyPlaylist.name,
+              imageUrl: imageUrl,
+              songs: songs,
+              numberOfSongs: songs.length,
+            };
+          });
+
+        const playlistsWithImages = await Promise.all(
+          transformedPlaylistsPromises
+        );
+        setPreviewPlaylists(playlistsWithImages);
+      };
+
+      generatePreviewPlaylists();
     }
   }, [previewData]);
 

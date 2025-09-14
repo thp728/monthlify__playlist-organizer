@@ -1,7 +1,10 @@
 from flask import Flask, jsonify, request, make_response
 import os
 from flask_cors import CORS
-from . import spotify_utils, auth
+from . import image_utils, spotify_utils, auth
+
+from io import BytesIO
+from flask import send_file, Blueprint
 
 import spotipy
 
@@ -332,6 +335,27 @@ def preview_playlist():
     except Exception as e:
         print(f"Unexpected Error: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
+
+
+@app.route("/api/images/cover/<month_code>/<year>", methods=["GET"])
+def get_playlist_cover(month_code, year):
+    """
+    API endpoint to generate and serve a playlist cover image.
+    Example URL: /api/images/cover/JAN/2024
+    """
+    try:
+        # Generate the image
+        img = image_utils.create_playlist_cover(month_code.upper(), int(year))
+
+        # Save the image to a byte stream
+        img_io = BytesIO()
+        img.save(img_io, "PNG")
+        img_io.seek(0)
+
+        return send_file(img_io, mimetype="image/png")
+
+    except ValueError:
+        return {"error": "Invalid month or year format"}, 400
 
 
 def get_month_name(month_number):
