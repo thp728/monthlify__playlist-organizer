@@ -4,7 +4,7 @@ from flask_cors import CORS
 from . import image_utils, spotify_utils, auth
 
 from io import BytesIO
-from flask import send_file, Blueprint
+from flask import send_file
 
 import spotipy
 
@@ -108,109 +108,6 @@ def logout():
     )
 
     return resp, 200
-
-
-@app.route("/api/spotify/liked-songs", methods=["GET"])
-def get_liked_songs():
-    """
-    Fetches a user's liked songs.
-    This endpoint requires an access token passed in the Authorization header.
-    """
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return jsonify({"error": "Authorization header is missing."}), 401
-
-    try:
-        token_info = {
-            "access_token": auth_header.split(" ")[1],
-            # We assume a valid token for this test.
-            # In a real app, you'd retrieve the token from your session/DB
-            # and check for expiration.
-        }
-
-        sp = spotify_utils.create_spotify_client(token_info)
-        liked_songs = spotify_utils.get_liked_songs(sp)
-
-        # We'll return just the track names and artists for simplicity
-        tracks_data = [
-            {
-                "name": track["track"]["name"],
-                "artist": track["track"]["artists"][0]["name"],
-            }
-            for track in liked_songs
-        ]
-
-        return jsonify({"liked_songs": tracks_data})
-
-    except spotipy.exceptions.SpotifyException as e:
-        return jsonify({"error": str(e)}), 401
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
-
-
-@app.route("/api/monthlify/run", methods=["POST"])
-def run_monthlify():
-    """
-    Orchestrates the creation of monthly playlists from a user-provided playlist URL.
-    The access token should be provided in the Authorization header.
-    The playlist URL should be in the request body.
-    """
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return jsonify({"error": "Authorization header is missing."}), 401
-
-    data = request.get_json()
-    if not data or "playlist_url" not in data:
-        return jsonify({"error": "Playlist URL is missing from the request body."}), 400
-
-    playlist_url = data["playlist_url"]
-
-    try:
-        token_info = {
-            "access_token": auth_header.split(" ")[1],
-        }
-
-        sp = spotify_utils.create_spotify_client(token_info)
-        user_info = sp.me()
-        user_id = user_info["id"]
-
-        # Step 1: Get tracks from the provided playlist URL
-        print(f"Fetching songs from the playlist: {playlist_url}...")
-        all_songs = spotify_utils.get_all_playlist_tracks(sp, playlist_url)
-        print(f"Found {len(all_songs)} songs.")
-
-        # Step 2: Organize songs by month of addition
-        monthly_songs = {}
-        for item in all_songs:
-            added_at = item["added_at"]
-            month_key = added_at[:7]
-
-            if month_key not in monthly_songs:
-                monthly_songs[month_key] = []
-
-            # We need the track URI to add it to a new playlist
-            monthly_songs[month_key].append(item["track"]["uri"])
-
-        # Step 3: Create playlists and add songs for each month
-        for month_key, track_uris in monthly_songs.items():
-            year, month = month_key.split("-")
-            month_name = get_month_name(int(month))
-            playlist_name = f"Monthly - {month_name} {year}"
-
-            print(f"Processing playlist for: {playlist_name}")
-
-            playlist = spotify_utils.get_or_create_playlist(sp, user_id, playlist_name)
-            spotify_utils.add_tracks_to_playlist(sp, playlist["id"], track_uris)
-            print(f"Added {len(track_uris)} songs to '{playlist_name}'.")
-
-        return jsonify({"message": "Monthly playlists created successfully!"})
-
-    except spotipy.exceptions.SpotifyException as e:
-        print(f"Spotify API Error: {e}")
-        return jsonify({"error": str(e)}), 401
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-        return jsonify({"error": "An unexpected error occurred."}), 500
 
 
 @app.route("/api/spotify/playlists", methods=["GET"])
@@ -358,18 +255,99 @@ def get_playlist_cover(month_code, year):
         return {"error": "Invalid month or year format"}, 400
 
 
-def get_month_name(month_number):
+@app.route("/api/create-monthly-playlists", methods=["POST"])
+def create_monthly_playlists():
     """
-    Helper function to convert a month number to a month name.
+    API endpoint to create multiple new playlists, add tracks, and upload a custom cover image to each.
     """
-    import calendar
+    access_token = request.cookies.get("spotify_access_token")
 
-    return calendar.month_name[month_number]
+    if not access_token:
+        return jsonify({"error": "Authorization cookie is missing."}), 401
 
+    data = request.get_json()
+    monthly_playlists_details = data.get("playlists")
+    identifier = data.get("identifier")
+    identifier_type = data.get("type")
 
-# You'll add more endpoints here later for creating playlists, etc.
+    if not all([monthly_playlists_details, identifier, identifier_type]):
+        return jsonify({"error": "Missing 'playlists' data in the request body."}), 400
+
+    try:
+        sp = spotipy.Spotify(auth=access_token)
+        user_id = sp.me()["id"]
+
+        if identifier_type == "id":
+            if identifier == "liked-songs":
+                source_playlist_name = "Liked Songs"
+            else:
+                source_playlist_name = spotify_utils.get_playlist_name_from_identifier(
+                    sp, identifier
+                )
+        elif identifier_type == "url":
+            source_playlist_name = spotify_utils.get_playlist_name_from_identifier(
+                sp, identifier
+            )
+        else:
+            return jsonify({"error": "Invalid identifier type"}), 400
+
+        successful_playlists = []
+        for playlist_data in monthly_playlists_details:
+            playlist_name = playlist_data.get("name")
+            songs_list = playlist_data.get("songs", [])
+
+            if not playlist_name:
+                continue
+
+            track_uris = [song["id"] for song in songs_list if "id" in song]
+
+            if not track_uris:
+                continue
+
+            # Create the playlist
+            new_playlist = spotify_utils.create_playlist_with_tracks(
+                sp=sp,
+                user_id=user_id,
+                source_playlist_name=source_playlist_name,
+                playlist_name=playlist_name,
+                track_uris=track_uris,
+            )
+
+            # Get month and year for the cover image from the playlist name: Feb 2025
+            name_parts = playlist_name.split()
+            month_code = name_parts[0][:3].upper()
+            year = name_parts[1]
+
+            # Generate and upload the cover image
+            img = image_utils.create_playlist_cover(month_code, int(year))
+            img_io = BytesIO()
+            img.save(img_io, "JPEG", quality=85, optimize=True)  # keep under 256 KB
+            img_io.seek(0)
+
+            result = spotify_utils.upload_playlist_cover_image(
+                sp, new_playlist["id"], img_io
+            )
+
+            successful_playlists.append(
+                {
+                    "name": new_playlist["name"],
+                    "id": new_playlist["id"],
+                    "url": new_playlist["external_urls"]["spotify"],
+                }
+            )
+
+        return (
+            jsonify(
+                {
+                    "message": "Playlists created successfully!",
+                    "playlists": successful_playlists,
+                }
+            ),
+            201,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
-    # You will use a better method to run the app in production,
-    # for now this is fine for local development.
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=3000, debug=True)

@@ -1,6 +1,7 @@
 import spotipy
+import base64
 from collections import defaultdict
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 
 def get_all_user_playlists(sp):
@@ -98,7 +99,7 @@ def fetch_playlist_tracks(sp: spotipy.Spotify, playlist_id: str):
 
     results = sp.playlist_items(
         playlist_id,
-        fields="items.added_at,items.track.name,items.track.artists,next",
+        fields="items.added_at,items.track.name,items.track.artists,items.track.uri,next",
         additional_types=("track", "episode"),
     )
 
@@ -136,9 +137,15 @@ def process_tracks_for_preview(tracks):
 
             track_name = track["name"]
             artist_names = ", ".join([artist["name"] for artist in track["artists"]])
+            track_uri = track["uri"]
 
             monthly_playlists[year_month].append(
-                {"name": track_name, "artists": artist_names, "added_at": added_at}
+                {
+                    "name": track_name,
+                    "artists": artist_names,
+                    "added_at": added_at,
+                    "uri": track_uri,
+                }
             )
     return dict(monthly_playlists)
 
@@ -156,12 +163,12 @@ def format_monthly_preview(monthly_data):
         year, month = year_month.split("-")
         month_name = get_month_name(int(month))
 
-        # Create a list of tracks with unique IDs
-        tracks_with_unique_ids = []
-        for i, track in enumerate(monthly_data[year_month]):
-            tracks_with_unique_ids.append(
+        # Create a list of tracks using their Spotify URIs as IDs
+        tracks_with_uri_ids = []
+        for track in monthly_data[year_month]:
+            tracks_with_uri_ids.append(
                 {
-                    "id": f"{year_month}-{i}",  # Unique ID for each track
+                    "id": track["uri"],  # Use the track URI as the unique ID
                     "name": track["name"],
                     "artists": track["artists"],
                     "added_at": track["added_at"],
@@ -172,7 +179,7 @@ def format_monthly_preview(monthly_data):
             {
                 "id": year_month,  # e.g., "2023-01"
                 "name": f"{month_name} {year}",
-                "tracks": tracks_with_unique_ids,
+                "tracks": tracks_with_uri_ids,
             }
         )
     return formatted_preview
@@ -219,3 +226,142 @@ def get_monthly_previews_from_liked_songs(sp: spotipy.Spotify):
         return format_monthly_preview(monthly_data)
     except Exception as e:
         raise Exception(f"Failed to process liked songs: {e}")
+
+
+def find_existing_playlist(sp, user_id, playlist_name):
+    """
+    Checks if a playlist with a given name already exists for the user.
+    """
+    playlists = sp.user_playlists(user=user_id)
+    for playlist in playlists["items"]:
+        if playlist["name"] == playlist_name:
+            return playlist
+    return None
+
+
+def create_playlist_with_tracks(
+    sp, user_id, source_playlist_name, playlist_name, track_uris
+):
+    """
+    Creates a new Spotify playlist and adds tracks to it,
+    or updates an existing playlist with new unique tracks.
+
+    Args:
+        sp (spotipy.Spotify): The authenticated spotipy client instance.
+        user_id (str): The Spotify ID of the user.
+        source_playlist_name (str): The name of the source playlist.
+        playlist_name (str): The name for the new or existing playlist.
+        track_uris (list): A list of Spotify track URIs to add to the playlist.
+
+    Returns:
+        dict: The response from the Spotify API for the new or updated playlist.
+    """
+    existing_playlist = find_existing_playlist(sp, user_id, playlist_name)
+
+    if existing_playlist:
+        print(f"Playlist '{playlist_name}' already exists. Appending new tracks.")
+        playlist_id = existing_playlist["id"]
+
+        sp.playlist_change_details(
+            playlist_id, description=f"Updated by Monthlify from {source_playlist_name}"
+        )
+
+        # Get existing tracks to avoid duplicates
+        existing_tracks = sp.playlist_items(playlist_id)["items"]
+        existing_track_uris = {track["track"]["uri"] for track in existing_tracks}
+
+        # Filter out tracks that are already in the playlist
+        new_track_uris = [uri for uri in track_uris if uri not in existing_track_uris]
+
+        if new_track_uris:
+            # Spotify's API has a limit of 100 tracks per request
+            for i in range(0, len(new_track_uris), 100):
+                chunk = new_track_uris[i : i + 100]
+                sp.user_playlist_add_tracks(
+                    user=user_id, playlist_id=playlist_id, tracks=chunk
+                )
+            print(f"Added {len(new_track_uris)} new tracks to '{playlist_name}'.")
+        else:
+            print(
+                f"All tracks already exist in '{playlist_name}'. No new tracks added."
+            )
+
+        return existing_playlist
+
+    else:
+        print(f"Creating a new playlist named '{playlist_name}'.")
+        # Create the playlist
+        new_playlist = sp.user_playlist_create(
+            user=user_id,
+            name=playlist_name,
+            public=False,
+            description=f"Created by Monthlify from {source_playlist_name}",
+        )
+        playlist_id = new_playlist["id"]
+
+        # Add tracks to the new playlist
+        if track_uris:
+            # Spotify's API has a limit of 100 tracks per request
+            for i in range(0, len(track_uris), 100):
+                chunk = track_uris[i : i + 100]
+                sp.user_playlist_add_tracks(
+                    user=user_id, playlist_id=playlist_id, tracks=chunk
+                )
+        return new_playlist
+
+
+def get_playlist_name_from_identifier(sp, identifier):
+    """
+    Gets the playlist name from a Spotify playlist ID or URL.
+
+    Args:
+        sp (spotipy.Spotify): The authenticated spotipy client instance.
+        identifier (str): The Spotify playlist ID or full URL.
+
+    Returns:
+        str: The name of the playlist, or None if not found.
+    """
+    # Check if the identifier is a URL
+    if "spotify.com/playlist" in identifier:
+        try:
+            # Parse the URL to get the playlist ID
+            parsed_url = urlparse(identifier)
+            playlist_id = parsed_url.path.split("/")[-1]
+            # Handle URLs with query parameters
+            if not playlist_id:
+                playlist_id = (
+                    parse_qs(parsed_url.query).get("uri", [None])[0].split(":")[-1]
+                )
+        except (ValueError, IndexError):
+            return None
+    else:
+        # Assume it's a playlist ID
+        playlist_id = identifier
+
+    try:
+        playlist = sp.playlist(playlist_id)
+        return playlist["name"]
+    except Exception:
+        return None
+
+
+def upload_playlist_cover_image(sp, playlist_id, image_stream):
+    """
+    Uploads a new cover image for a playlist from a byte stream.
+
+    Args:
+        sp (spotipy.Spotify): The authenticated spotipy client instance.
+        playlist_id (str): The ID of the playlist to update.
+        image_stream (io.BytesIO): A byte stream containing the image data.
+
+    Returns:
+        bool: True if the upload was successful, False otherwise.
+    """
+    try:
+        # The image data is read from the stream and converted to a base64 encoded string.
+        image_data = base64.b64encode(image_stream.getvalue()).decode("utf-8")
+        sp.playlist_upload_cover_image(playlist_id, image_data)
+        return True
+    except Exception as e:
+        print(f"Error uploading playlist cover: {e}")
+        return False

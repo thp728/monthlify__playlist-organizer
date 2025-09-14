@@ -8,6 +8,7 @@ import { PlaylistDetail } from "@/models/playlistDetail";
 import { Track } from "@/models/track";
 
 interface PreviewTrack {
+  id: string;
   name: string;
   artists: string;
   added_at: string;
@@ -38,10 +39,15 @@ export default function PreviewPage() {
   );
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [sourceIdentifier, setSourceIdentifier] = useState<string>("");
+  const [sourceIdentifierType, setSourceIdentifierType] = useState<string>("");
 
   useEffect(() => {
-    const identifier = searchParams.get("identifier");
-    const type = searchParams.get("type");
+    const identifier = searchParams.get("identifier")!;
+    const type = searchParams.get("type")!;
+
+    setSourceIdentifier(identifier);
+    setSourceIdentifierType(type);
 
     if (!identifier || !type) {
       router.push("/dashboard");
@@ -102,14 +108,12 @@ export default function PreviewPage() {
             // Construct the API URL for the image
             const imageUrl = `http://127.0.0.1:3000/api/images/cover/${monthCode}/${year}`;
 
-            const songs: Track[] = monthlyPlaylist.tracks.map(
-              (track, index) => ({
-                id: `${monthlyPlaylist.id}-${index}`,
-                name: track.name,
-                artist: track.artists,
-                addedAt: track.added_at,
-              })
-            );
+            const songs: Track[] = monthlyPlaylist.tracks.map((track) => ({
+              id: track.id,
+              name: track.name,
+              artist: track.artists,
+              addedAt: track.added_at,
+            }));
 
             return {
               id: monthlyPlaylist.id.toString(),
@@ -135,6 +139,10 @@ export default function PreviewPage() {
       <LoadingSpinner loadingText="Generating preview..." />
     </div>
   ) : (
-    <Preview playlists={previewPlaylists} />
+    <Preview
+      playlists={previewPlaylists}
+      identifier={sourceIdentifier}
+      type={sourceIdentifierType}
+    />
   );
 }

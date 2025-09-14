@@ -15,8 +15,8 @@ export default function DashboardLayout({
   };
 
   return (
-    <section>
-      {/* Include your header component here */}
+    <section className="flex min-h-full flex-col">
+      {/* Header */}
       <header className="flex w-full items-center justify-between bg-white p-4">
         <h1
           onClick={goToHome}
@@ -27,7 +27,10 @@ export default function DashboardLayout({
         <LogoutButton />
       </header>
 
-      <main>{children}</main>
+      {/* Main fills remaining height */}
+      <main className="flex items-center justify-center flex-1">
+        {children}
+      </main>
     </section>
   );
 }

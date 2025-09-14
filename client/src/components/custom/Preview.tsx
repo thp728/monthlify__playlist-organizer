@@ -11,22 +11,57 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { PlaylistDetail } from "@/models/playlistDetail";
+import LoadingSpinner from "./LoadingSpinner";
+import { usePlaylistStore } from "@/store/playlistStore";
 
 interface PreviewProps {
   playlists: PlaylistDetail[];
+  identifier: string;
+  type: string;
 }
 
-export function Preview({ playlists }: PreviewProps) {
+export function Preview({ playlists, identifier, type }: PreviewProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [activePlaylist, setActivePlaylist] = useState<PlaylistDetail | null>(
     null
   );
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const createPlaylists = () => {
-    // This function will eventually call the Flask backend API
-    // to create the monthly playlists on Spotify.
-    // We'll add this implementation later.
+  const setNewPlaylists = usePlaylistStore((state) => state.setNewPlaylists);
+
+  const createPlaylists = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        "http://127.0.0.1:3000/api/create-monthly-playlists",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            playlists: playlists,
+            identifier: identifier,
+            type: type,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create playlists.");
+      }
+
+      const data = await response.json();
+      setNewPlaylists(data.playlists);
+      router.push("/dashboard/success");
+    } catch (error) {
+      console.error("Error creating playlists:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onPlaylistClick = (id: string) => {
@@ -39,7 +74,11 @@ export function Preview({ playlists }: PreviewProps) {
     router.push("/dashboard");
   };
 
-  return (
+  return isLoading ? (
+    <div className="w-full min-h-screen flex justify-center items-center">
+      <LoadingSpinner loadingText="Creating playlists..." />
+    </div>
+  ) : (
     <div className="container mx-auto max-w-5xl px-4 py-8">
       {/* The info text and heading here */}
       <div className="text-center">

@@ -1,6 +1,3 @@
-# monthlify/server/src/auth.py
-
-import os
 import urllib.parse
 import base64
 import requests
@@ -14,7 +11,7 @@ def get_spotify_auth_url(client_id, redirect_uri):
     Constructs the Spotify authorization URL.
     The user will be redirected to this URL to log in and grant permissions.
     """
-    scopes = "playlist-read-private playlist-modify-private user-library-read"
+    scopes = "playlist-read-private playlist-modify-private playlist-modify-public user-library-read ugc-image-upload"
 
     params = {
         "response_type": "code",
