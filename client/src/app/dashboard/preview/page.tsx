@@ -42,6 +42,8 @@ export default function PreviewPage() {
   const [sourceIdentifier, setSourceIdentifier] = useState<string>("");
   const [sourceIdentifierType, setSourceIdentifierType] = useState<string>("");
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
     const identifier = searchParams.get("identifier")!;
     const type = searchParams.get("type")!;
@@ -59,7 +61,7 @@ export default function PreviewPage() {
       setError(null);
 
       try {
-        const response = await fetch("http://127.0.0.1:3000/api/preview", {
+        const response = await fetch(`${apiBaseUrl}/api/preview`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -92,7 +94,7 @@ export default function PreviewPage() {
     };
 
     fetchPreviewData();
-  }, [searchParams, router, error]);
+  }, [searchParams, router, error, apiBaseUrl]);
 
   useEffect(() => {
     if (previewData) {
@@ -106,7 +108,7 @@ export default function PreviewPage() {
             const year = nameParts[1];
 
             // Construct the API URL for the image
-            const imageUrl = `http://127.0.0.1:3000/api/images/cover/${monthCode}/${year}`;
+            const imageUrl = `${apiBaseUrl}/api/images/cover/${monthCode}/${year}`;
 
             const songs: Track[] = monthlyPlaylist.tracks.map((track) => ({
               id: track.id,
@@ -132,7 +134,7 @@ export default function PreviewPage() {
 
       generatePreviewPlaylists();
     }
-  }, [previewData]);
+  }, [previewData, apiBaseUrl]);
 
   return isLoading ? (
     <div className="w-full min-h-screen flex justify-center items-center">

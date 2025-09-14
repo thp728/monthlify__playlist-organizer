@@ -13,12 +13,14 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
     async function fetchData() {
       try {
         // Fetch user playlists
         const playlistsResponse = await fetch(
-          "http://127.0.0.1:3000/api/spotify/playlists",
+          `${apiBaseUrl}/api/spotify/playlists`,
           {
             method: "GET",
             credentials: "include",
@@ -44,13 +46,10 @@ export default function DashboardPage() {
         setUserPlaylists(formattedPlaylists);
 
         // Fetch the user's name from the new endpoint
-        const userResponse = await fetch(
-          "http://127.0.0.1:3000/api/spotify/user",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const userResponse = await fetch(`${apiBaseUrl}/api/spotify/user`, {
+          method: "GET",
+          credentials: "include",
+        });
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
@@ -66,7 +65,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, [router]);
+  }, [router, apiBaseUrl]);
 
   if (isLoading) {
     return (

@@ -30,11 +30,13 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
 
   const setNewPlaylists = usePlaylistStore((state) => state.setNewPlaylists);
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const createPlaylists = async () => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        "http://127.0.0.1:3000/api/create-monthly-playlists",
+        `${apiBaseUrl}/api/create-monthly-playlists`,
         {
           method: "POST",
           credentials: "include",

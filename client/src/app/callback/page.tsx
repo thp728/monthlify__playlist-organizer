@@ -8,6 +8,8 @@ export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
     const code = searchParams.get("code");
     const error = searchParams.get("error");
@@ -22,7 +24,7 @@ export default function CallbackPage() {
       const exchangeToken = async () => {
         try {
           const response = await fetch(
-            `http://127.0.0.1:3000/api/auth/callback?code=${code}`,
+            `${apiBaseUrl}/api/auth/callback?code=${code}`,
             {
               method: "GET",
               credentials: "include", // IMPORTANT: allow cookies to be set
@@ -43,7 +45,7 @@ export default function CallbackPage() {
       };
       exchangeToken();
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, apiBaseUrl]);
 
   return (
     <div className="h-full flex flex-col justify-center items-center">

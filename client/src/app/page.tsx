@@ -7,10 +7,12 @@ import LoadingSpinner from "@/components/custom/LoadingSpinner";
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:3000/api/auth/login", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "GET",
         credentials: "include",
       });

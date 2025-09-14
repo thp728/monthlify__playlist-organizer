@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 export function LogoutButton() {
   const router = useRouter();
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const handleLogout = async () => {
     try {
       // Make a request to the backend logout endpoint
-      const response = await fetch("http://127.0.0.1:3000/api/auth/logout", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
