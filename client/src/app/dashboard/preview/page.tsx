@@ -68,10 +68,10 @@ export default function PreviewPage() {
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
-          console.error(err);
+          console.error(error);
         } else {
           setError("An unknown error occurred.");
-          console.error(err);
+          console.error(error);
         }
       } finally {
         setIsLoading(false);
@@ -79,7 +79,7 @@ export default function PreviewPage() {
     };
 
     fetchPreviewData();
-  }, [searchParams, router, apiBaseUrl]);
+  }, [searchParams, router, apiBaseUrl, error]);
 
   useEffect(() => {
     if (previewData) {

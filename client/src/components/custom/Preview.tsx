@@ -18,7 +18,7 @@ import { PreviewPlaylistGrid } from "./PreviewPlaylistGrid";
 interface PreviewProps {
   playlists: FrontendPreviewPlaylist[];
   identifier: string;
-  type: "id" | "url";
+  type: "id" | "url" | null;
 }
 
 export function Preview({ playlists, identifier, type }: PreviewProps) {
