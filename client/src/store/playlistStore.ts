@@ -1,9 +1,23 @@
 import { create } from "zustand";
 
-// Define the shape of your state
+export enum PlaylistAction {
+  Created = "created",
+  Updated = "updated",
+}
+
 interface PlaylistState {
-  newPlaylists: { name: string; url: string }[];
-  setNewPlaylists: (playlists: { name: string; url: string }[]) => void;
+  newPlaylists: {
+    name: string;
+    url: string;
+    action: PlaylistAction;
+  }[];
+  setNewPlaylists: (
+    playlists: {
+      name: string;
+      url: string;
+      action: PlaylistAction;
+    }[]
+  ) => void;
   clearPlaylists: () => void;
 }
 

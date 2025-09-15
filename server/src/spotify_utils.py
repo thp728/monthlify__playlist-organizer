@@ -254,7 +254,7 @@ def create_playlist_with_tracks(
         track_uris (list): A list of Spotify track URIs to add to the playlist.
 
     Returns:
-        dict: The response from the Spotify API for the new or updated playlist.
+        dict: A dictionary containing the playlist data and a flag for the action taken.
     """
     existing_playlist = find_existing_playlist(sp, user_id, playlist_name)
 
@@ -286,7 +286,7 @@ def create_playlist_with_tracks(
                 f"All tracks already exist in '{playlist_name}'. No new tracks added."
             )
 
-        return existing_playlist
+        return {"playlist": existing_playlist, "action_taken": "updated"}
 
     else:
         print(f"Creating a new playlist named '{playlist_name}'.")
@@ -307,7 +307,7 @@ def create_playlist_with_tracks(
                 sp.user_playlist_add_tracks(
                     user=user_id, playlist_id=playlist_id, tracks=chunk
                 )
-        return new_playlist
+        return {"playlist": new_playlist, "action_taken": "created"}
 
 
 def get_playlist_name_from_identifier(sp, identifier):

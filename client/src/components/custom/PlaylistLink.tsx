@@ -13,7 +13,7 @@ export const PlaylistLink = ({ name, url }: PlaylistLinkProps) => {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center space-x-2"
+        className="flex items-center"
       >
         <span>{name}</span>
         <ExternalLink size={16} />

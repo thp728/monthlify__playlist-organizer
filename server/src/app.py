@@ -304,14 +304,18 @@ def create_monthly_playlists():
             if not track_uris:
                 continue
 
-            # Create the playlist
-            new_playlist = spotify_utils.create_playlist_with_tracks(
+            # Call the updated function and store the returned dictionary
+            result_dict = spotify_utils.create_playlist_with_tracks(
                 sp=sp,
                 user_id=user_id,
                 source_playlist_name=source_playlist_name,
                 playlist_name=playlist_name,
                 track_uris=track_uris,
             )
+
+            # Extract the playlist data and action taken from the dictionary
+            new_playlist = result_dict["playlist"]
+            action_taken = result_dict["action_taken"]
 
             # Get month and year for the cover image from the playlist name: Feb 2025
             name_parts = playlist_name.split()
@@ -333,13 +337,14 @@ def create_monthly_playlists():
                     "name": new_playlist["name"],
                     "id": new_playlist["id"],
                     "url": new_playlist["external_urls"]["spotify"],
+                    "action": action_taken,  # Include the action taken in the final response
                 }
             )
 
         return (
             jsonify(
                 {
-                    "message": "Playlists created successfully!",
+                    "message": "Playlists processed successfully!",
                     "playlists": successful_playlists,
                 }
             ),
