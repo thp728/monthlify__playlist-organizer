@@ -50,7 +50,7 @@ export default function CallbackPage() {
 
   return (
     <div className="h-full flex flex-col justify-center items-center">
-      <LoadingSpinner loadingText="Logging you in..." />;
+      <LoadingSpinner loadingText="Logging you in..." />
     </div>
   );
 }

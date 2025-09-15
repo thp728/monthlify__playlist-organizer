@@ -13,7 +13,7 @@ import {
 export default function DashboardPage() {
   const [userPlaylists, setUserPlaylists] = useState<SimplifiedPlaylist[]>([]);
   const [userName, setUserName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -21,6 +21,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        setIsLoading(true);
         // Fetch user playlists
         const playlistsResponse = await fetch(
           `${apiBaseUrl}/api/spotify/playlists`,
@@ -74,7 +75,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
+      <div className="min-h-full flex justify-center items-center">
         <LoadingSpinner loadingText="Loading Playlists..." />
       </div>
     );

@@ -1,10 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { LoginButton } from "./LoginButton";
 
-interface HeroSectionProps {
-  onLogin: () => void;
-}
-
-export function HeroSection({ onLogin }: HeroSectionProps) {
+export function HeroSection() {
   return (
     <div>
       <section className="flex max-w-2xl flex-col items-center justify-center space-y-4 text-center">
@@ -25,12 +21,7 @@ export function HeroSection({ onLogin }: HeroSectionProps) {
         </p>
 
         {/* Login Button */}
-        <Button
-          onClick={onLogin}
-          className="mt-8 text-lg font-semibold px-8 py-6"
-        >
-          Login with Spotify
-        </Button>
+        <LoginButton />
       </section>
     </div>
   );

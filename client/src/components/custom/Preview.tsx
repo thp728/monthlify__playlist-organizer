@@ -77,7 +77,7 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
   };
 
   return isLoading ? (
-    <div className="w-full min-h-screen flex justify-center items-center">
+    <div className="w-full min-h-full flex justify-center items-center">
       <LoadingSpinner loadingText="Creating playlists..." />
     </div>
   ) : (

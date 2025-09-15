@@ -15,7 +15,7 @@ export default function PreviewPage() {
   const [previewData, setPreviewData] = useState<
     MonthlyPlaylistPreview[] | null
   >(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewPlaylists, setPreviewPlaylists] = useState<
     FrontendPreviewPlaylist[]
@@ -118,7 +118,7 @@ export default function PreviewPage() {
   }, [previewData, apiBaseUrl]);
 
   return isLoading ? (
-    <div className="w-full min-h-screen flex justify-center items-center">
+    <div className="w-full min-h-full flex justify-center items-center">
       <LoadingSpinner loadingText="Generating preview..." />
     </div>
   ) : (
