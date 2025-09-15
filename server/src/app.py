@@ -1,17 +1,16 @@
-from flask import Flask, jsonify, request, make_response, Response
 import os
-from flask_cors import CORS
-from . import image_utils, spotify_utils, auth
-from .models.spotify_types import (
-    UserProfile,
-    SimplifiedPlaylist,
-    MonthlyPlaylistPreview,
-)
-from typing import List, Dict, Any, Union, cast, Optional
 from io import BytesIO
-from flask import send_file
+from typing import Any, Dict, List, Optional, Union, cast
 
 import spotipy
+from flask import Flask, Response, jsonify, make_response, request, send_file
+from flask_cors import CORS
+
+from . import auth, image_utils, spotify_utils
+from .models.spotify_types import (
+    SimplifiedPlaylist,
+    UserProfile,
+)
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -188,7 +187,8 @@ def get_user_profile() -> tuple[Response, int]:
 @app.route("/api/preview", methods=["POST"])
 def preview_playlist() -> tuple[Response, int]:
     """
-    Fetches a preview of monthly playlists from a given Spotify playlist URL, ID, or liked songs.
+    Fetches a preview of monthly playlists
+    from a given Spotify playlist URL, ID, or liked songs.
     """
     access_token = request.cookies.get("spotify_access_token")
 
@@ -255,7 +255,10 @@ def get_playlist_cover(
 @app.route("/api/create-monthly-playlists", methods=["POST"])
 def create_monthly_playlists() -> tuple[Response, int]:
     """
-    API endpoint to create multiple new playlists, add tracks, and upload a custom cover image to each.
+    API endpoint to create:
+        multiple new playlists
+        add tracks
+        and upload a custom cover image to each.
     """
     access_token = request.cookies.get("spotify_access_token")
 
@@ -283,7 +286,10 @@ def create_monthly_playlists() -> tuple[Response, int]:
             make_response(
                 jsonify(
                     {
-                        "error": "Missing 'identifier' or 'identifier_type' in the request body."
+                        "error": (
+                            "Missing 'identifier' or 'identifier_type' "
+                            "in the request body."
+                        )
                     }
                 )
             ),

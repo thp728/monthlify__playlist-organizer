@@ -1,7 +1,8 @@
 import os
 import random
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from typing import Tuple, List, Union
+from typing import List, Tuple, Union
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 FONTS_DIR = os.path.join(BASE_DIR, "fonts")

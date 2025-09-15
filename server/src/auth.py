@@ -1,7 +1,8 @@
-import urllib.parse
 import base64
+import urllib.parse
+from typing import Any, Dict
+
 import requests
-from typing import Dict, Any
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -11,7 +12,13 @@ def get_spotify_auth_url(client_id: str, redirect_uri: str) -> str:
     """
     Constructs the Spotify authorization URL.
     """
-    scopes = "playlist-read-private playlist-modify-private playlist-modify-public user-library-read ugc-image-upload"
+    scopes = (
+        "playlist-read-private "
+        "playlist-modify-private "
+        "playlist-modify-public "
+        "user-library-read "
+        "ugc-image-upload"
+    )
 
     params: Dict[str, str] = {
         "response_type": "code",

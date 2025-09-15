@@ -1,17 +1,17 @@
-import spotipy
 import base64
 from collections import defaultdict
-from urllib.parse import urlparse, parse_qs
-from typing import List, Dict, Any, Optional
 from io import BytesIO
+from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlparse
+
+import spotipy
+
 from .models.spotify_types import (
-    SpotifyPlaylistsResult,
-    Playlist,
-    SimplifiedPlaylist,
-    SpotifyItem,
     MonthlyPlaylistPreview,
     MonthlyTrack,
-    UserProfile,
+    Playlist,
+    SpotifyItem,
+    SpotifyPlaylistsResult,
 )
 
 
@@ -120,7 +120,13 @@ def fetch_playlist_tracks(sp: spotipy.Spotify, playlist_id: str) -> List[Spotify
     """Fetches all tracks for a given playlist ID using the provided Spotify client."""
     results: Dict[str, Any] = sp.playlist_items(
         playlist_id,
-        fields="items.added_at,items.track.name,items.track.artists,items.track.uri,next",
+        fields=(
+            "items.added_at,"
+            "items.track.name,"
+            "items.track.artists,"
+            "items.track.uri,"
+            "next"
+        ),
         additional_types=("track", "episode"),
     )
 
