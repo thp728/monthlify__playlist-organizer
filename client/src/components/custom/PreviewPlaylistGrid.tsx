@@ -3,21 +3,21 @@
 import React, { useState } from "react";
 import { PlaylistCard } from "./PlaylistCard";
 import { Input } from "@/components/ui/input";
-import { Playlist } from "@/models/playlist";
+import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
 
-interface PlaylistGridProps {
-  playlists: Playlist[];
+interface PreviewPlaylistGridProps {
+  playlists: FrontendPreviewPlaylist[];
   selectedPlaylistId: string | null;
   onPlaylistClick: (playlistId: string) => void;
   isSearchEnabled?: boolean;
 }
 
-export function PlaylistGrid({
+export function PreviewPlaylistGrid({
   playlists,
   selectedPlaylistId,
   onPlaylistClick,
   isSearchEnabled = true,
-}: PlaylistGridProps) {
+}: PreviewPlaylistGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredPlaylists = playlists.filter((playlist) =>

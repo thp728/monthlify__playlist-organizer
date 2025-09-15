@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { PlaylistGrid } from "./PlaylistGrid";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -10,21 +9,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { PlaylistDetail } from "@/models/playlistDetail";
 import LoadingSpinner from "./LoadingSpinner";
 import { usePlaylistStore } from "@/store/playlistStore";
+import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
+import { CreatePlaylistsResponse, ErrorResponse } from "@/lib/types/api";
+import { PreviewPlaylistGrid } from "./PreviewPlaylistGrid";
 
 interface PreviewProps {
-  playlists: PlaylistDetail[];
+  playlists: FrontendPreviewPlaylist[];
   identifier: string;
-  type: string;
+  type: "id" | "url";
 }
 
 export function Preview({ playlists, identifier, type }: PreviewProps) {
   const [openDialog, setOpenDialog] = useState(false);
-  const [activePlaylist, setActivePlaylist] = useState<PlaylistDetail | null>(
-    null
-  );
+  const [activePlaylist, setActivePlaylist] =
+    useState<FrontendPreviewPlaylist | null>(null);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,11 +52,11 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: ErrorResponse = await response.json();
         throw new Error(errorData.error || "Failed to create playlists.");
       }
 
-      const data = await response.json();
+      const data: CreatePlaylistsResponse = await response.json();
       setNewPlaylists(data.playlists);
       router.push("/dashboard/success");
     } catch (error) {
@@ -97,7 +97,7 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
       </div>
 
       <div className="flex flex-col items-center">
-        <PlaylistGrid
+        <PreviewPlaylistGrid
           playlists={playlists}
           selectedPlaylistId={null}
           onPlaylistClick={onPlaylistClick}

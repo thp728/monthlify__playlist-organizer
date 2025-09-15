@@ -1,23 +1,9 @@
+import { CreatedPlaylist } from "@/lib/types/playlist";
 import { create } from "zustand";
 
-export enum PlaylistAction {
-  Created = "created",
-  Updated = "updated",
-}
-
 interface PlaylistState {
-  newPlaylists: {
-    name: string;
-    url: string;
-    action: PlaylistAction;
-  }[];
-  setNewPlaylists: (
-    playlists: {
-      name: string;
-      url: string;
-      action: PlaylistAction;
-    }[]
-  ) => void;
+  newPlaylists: CreatedPlaylist[];
+  setNewPlaylists: (playlists: CreatedPlaylist[]) => void;
   clearPlaylists: () => void;
 }
 

@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
 import { PlaylistLink } from "@/components/custom/PlaylistLink";
-import { PlaylistAction, usePlaylistStore } from "@/store/playlistStore";
+import { usePlaylistStore } from "@/store/playlistStore";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { PlaylistAction } from "@/lib/types/api";
 
 export default function SuccessPage() {
   const { newPlaylists, clearPlaylists } = usePlaylistStore();
@@ -55,7 +56,7 @@ export default function SuccessPage() {
                   <div className="flex flex-col items-center space-y-2">
                     {createdPlaylists.map((playlist) => (
                       <PlaylistLink
-                        key={playlist.url}
+                        key={playlist.id}
                         name={playlist.name}
                         url={playlist.url}
                       />
@@ -72,7 +73,7 @@ export default function SuccessPage() {
                   <div className="flex flex-col items-center space-y-2">
                     {updatedPlaylists.map((playlist) => (
                       <PlaylistLink
-                        key={playlist.url}
+                        key={playlist.id}
                         name={playlist.name}
                         url={playlist.url}
                       />

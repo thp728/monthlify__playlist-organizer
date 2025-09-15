@@ -4,57 +4,42 @@ import { Preview } from "@/components/custom/Preview";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "@/components/custom/LoadingSpinner";
-import { PlaylistDetail } from "@/models/playlistDetail";
-import { Track } from "@/models/track";
-
-interface PreviewTrack {
-  id: string;
-  name: string;
-  artists: string;
-  added_at: string;
-}
-
-interface PreviewMonthlyPlaylist {
-  id: number;
-  name: string;
-  tracks: PreviewTrack[];
-}
-
-interface PreviewResponse {
-  preview_data: PreviewMonthlyPlaylist[];
-}
-
-interface ErrorResponse {
-  error: string;
-}
+import {
+  ErrorResponse,
+  MonthlyPlaylistPreview,
+  MonthlyTrack,
+} from "@/lib/types/api";
+import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
 
 export default function PreviewPage() {
   const [previewData, setPreviewData] = useState<
-    PreviewMonthlyPlaylist[] | null
+    MonthlyPlaylistPreview[] | null
   >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [previewPlaylists, setPreviewPlaylists] = useState<PlaylistDetail[]>(
-    []
-  );
+  const [previewPlaylists, setPreviewPlaylists] = useState<
+    FrontendPreviewPlaylist[]
+  >([]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sourceIdentifier, setSourceIdentifier] = useState<string>("");
-  const [sourceIdentifierType, setSourceIdentifierType] = useState<string>("");
+  const [sourceIdentifierType, setSourceIdentifierType] = useState<
+    "id" | "url" | null
+  >(null);
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
-    const identifier = searchParams.get("identifier")!;
-    const type = searchParams.get("type")!;
+    const identifier = searchParams.get("identifier");
+    const type = searchParams.get("type");
 
-    setSourceIdentifier(identifier);
-    setSourceIdentifierType(type);
-
-    if (!identifier || !type) {
+    if (!identifier || (type !== "id" && type !== "url")) {
       router.push("/dashboard");
       return;
     }
+
+    setSourceIdentifier(identifier);
+    setSourceIdentifierType(type);
 
     const fetchPreviewData = async () => {
       setIsLoading(true);
@@ -77,9 +62,9 @@ export default function PreviewPage() {
           );
         }
 
-        const successData = await response.json();
-        const data: PreviewResponse = successData;
-        setPreviewData(data.preview_data);
+        const successData: { preview_data: MonthlyPlaylistPreview[] } =
+          await response.json();
+        setPreviewData(successData.preview_data);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -94,14 +79,13 @@ export default function PreviewPage() {
     };
 
     fetchPreviewData();
-  }, [searchParams, router, error, apiBaseUrl]);
+  }, [searchParams, router, apiBaseUrl]);
 
   useEffect(() => {
     if (previewData) {
-      const generatePreviewPlaylists = async () => {
-        // Use Promise.all to fetch all images concurrently
-        const transformedPlaylistsPromises: Promise<PlaylistDetail>[] =
-          previewData.map(async (monthlyPlaylist) => {
+      const generatePreviewPlaylists = () => {
+        const transformedPlaylists: FrontendPreviewPlaylist[] = previewData.map(
+          (monthlyPlaylist) => {
             // Extract month and year from the playlist name for the URL
             const nameParts = monthlyPlaylist.name.split(" ");
             const monthCode = nameParts[0].substring(0, 3);
@@ -110,7 +94,7 @@ export default function PreviewPage() {
             // Construct the API URL for the image
             const imageUrl = `${apiBaseUrl}/api/images/cover/${monthCode}/${year}`;
 
-            const songs: Track[] = monthlyPlaylist.tracks.map((track) => ({
+            const songs = monthlyPlaylist.tracks.map((track: MonthlyTrack) => ({
               id: track.id,
               name: track.name,
               artist: track.artists,
@@ -124,12 +108,9 @@ export default function PreviewPage() {
               songs: songs,
               numberOfSongs: songs.length,
             };
-          });
-
-        const playlistsWithImages = await Promise.all(
-          transformedPlaylistsPromises
+          }
         );
-        setPreviewPlaylists(playlistsWithImages);
+        setPreviewPlaylists(transformedPlaylists);
       };
 
       generatePreviewPlaylists();

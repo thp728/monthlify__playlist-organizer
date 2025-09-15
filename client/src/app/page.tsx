@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { HeroSection } from "@/components/custom/HeroSection";
 import LoadingSpinner from "@/components/custom/LoadingSpinner";
+import { SpotifyAuthResponse } from "@/lib/types/api";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +17,7 @@ export default function HomePage() {
         method: "GET",
         credentials: "include",
       });
-      const data = await response.json();
+      const data: SpotifyAuthResponse = await response.json();
 
       if (data.auth_url) {
         // Redirect the user to the Spotify authorization page

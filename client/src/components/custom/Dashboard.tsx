@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import LoadingSpinner from "./LoadingSpinner";
 import { Input } from "../ui/input";
-import { PlaylistGrid } from "./PlaylistGrid";
-import { Playlist } from "@/models/playlist";
+import { UserPlaylistGrid } from "./UserPlaylistGrid";
 import { useRouter } from "next/navigation";
+import { SimplifiedPlaylist } from "@/lib/types/api";
 
 interface DashboardProps {
-  userPlaylists: Playlist[];
+  userPlaylists: SimplifiedPlaylist[];
   userName: string | null;
 }
 
 export function Dashboard({ userPlaylists, userName }: DashboardProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null
   );
@@ -56,15 +54,10 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
       type: identifierType,
     }).toString();
 
-    // Redirect to the preview page with the identifier in the URL
     router.push(`/dashboard/preview?${queryParams}`);
   };
 
-  return isProcessing ? (
-    <div className="w-full min-h-screen flex justify-center items-center">
-      <LoadingSpinner loadingText="Loading..." />
-    </div>
-  ) : (
+  return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <div className="text-center mb-2">
         <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -78,7 +71,7 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
 
       <div className="flex flex-col flex-grow justify-between items-center">
         {/* Playlist Grid */}
-        <PlaylistGrid
+        <UserPlaylistGrid
           playlists={userPlaylists}
           selectedPlaylistId={selectedPlaylistId}
           onPlaylistClick={handlePlaylistClick}

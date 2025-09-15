@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import LoadingSpinner from "@/components/custom/LoadingSpinner";
+import { ErrorResponse } from "@/lib/types/api";
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function CallbackPage() {
           if (response.ok) {
             router.push("/dashboard");
           } else {
-            const data = await response.json();
+            const data: ErrorResponse = await response.json();
             console.error("Error during authentication:", data.error);
             router.push("/");
           }
