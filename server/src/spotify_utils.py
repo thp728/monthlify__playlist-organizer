@@ -54,68 +54,6 @@ def get_liked_songs_as_playlist(sp: spotipy.Spotify) -> Dict[str, Any]:
     return liked_songs_playlist
 
 
-def get_all_playlist_tracks(
-    sp: spotipy.Spotify, playlist_id: str
-) -> List[Dict[str, Any]]:
-    """
-    Fetches all tracks from a given playlist, handling pagination.
-    """
-    all_tracks: List[Dict[str, Any]] = []
-
-    if playlist_id == "liked-songs":
-        results = sp.current_user_saved_tracks(limit=50)
-    else:
-        results = sp.playlist_items(
-            playlist_id, fields="items,total,next", additional_types=("track",)
-        )
-
-    all_tracks.extend(results["items"])
-
-    while results["next"]:
-        results = sp.next(results)
-        all_tracks.extend(results["items"])
-
-    return all_tracks
-
-
-def get_or_create_playlist(
-    sp: spotipy.Spotify, user_id: str, playlist_name: str
-) -> Dict[str, Any]:
-    """
-    Checks if a playlist exists and returns it; otherwise, creates a new one.
-    """
-    playlists: SpotifyPlaylistsResult = sp.current_user_playlists()
-    for playlist in playlists["items"]:
-        if playlist["name"] == playlist_name:
-            # Clear existing tracks to prevent duplicates
-            sp.playlist_replace_items(playlist["id"], [])
-            print(f"Found existing playlist '{playlist_name}'. Cleared its contents.")
-            return playlist
-
-    # Playlist doesn't exist, create it
-    print(f"Creating new playlist: '{playlist_name}'")
-    return sp.user_playlist_create(user=user_id, name=playlist_name, public=False)
-
-
-def add_tracks_to_playlist(
-    sp: spotipy.Spotify, playlist_id: str, track_uris: List[str]
-) -> None:
-    """
-    Adds tracks to a playlist in batches of 100 due to API limitations.
-    """
-    batch_size = 100
-    for i in range(0, len(track_uris), batch_size):
-        batch = track_uris[i : i + batch_size]
-        sp.playlist_add_items(playlist_id, batch)
-
-
-def create_spotify_client(token_info: Dict[str, str]) -> spotipy.Spotify:
-    """
-    Creates and returns a Spotipy client object with the user's access token.
-    """
-    return spotipy.Spotify(auth=token_info["access_token"])
-
-
 def fetch_playlist_tracks(sp: spotipy.Spotify, playlist_id: str) -> List[SpotifyItem]:
     """Fetches all tracks for a given playlist ID using the provided Spotify client."""
     results: Dict[str, Any] = sp.playlist_items(

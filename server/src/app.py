@@ -119,11 +119,7 @@ def get_user_playlists() -> tuple[Response, int]:
         )
 
     try:
-        token_info = {
-            "access_token": access_token,
-        }
-
-        sp = spotify_utils.create_spotify_client(token_info)
+        sp = spotipy.Spotify(auth=access_token)
 
         playlists = spotify_utils.get_all_user_playlists(sp)
         liked_songs_playlist = spotify_utils.get_liked_songs_as_playlist(sp)
