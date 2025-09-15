@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
-          const fullName = userData.name;
+          const fullName = userData.display_name;
           const firstName = fullName.split(" ")[0];
           setUserName(firstName);
         }

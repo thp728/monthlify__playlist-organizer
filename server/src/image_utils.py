@@ -1,12 +1,12 @@
 import os
 import random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from typing import Tuple, List, Union
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 FONTS_DIR = os.path.join(BASE_DIR, "fonts")
 
-# 🎨 Gradient presets (Spotify-inspired)
-GRADIENT_PRESETS = [
+GRADIENT_PRESETS: List[Tuple[Tuple[int, int, int], Tuple[int, int, int]]] = [
     ((0, 180, 255), (255, 0, 150)),  # Blue → Pink
     ((255, 95, 109), (255, 195, 113)),  # Coral → Peach
     ((131, 58, 180), (253, 29, 29)),  # Purple → Red
@@ -15,7 +15,9 @@ GRADIENT_PRESETS = [
 ]
 
 
-def load_font(filename, size):
+def load_font(
+    filename: str, size: int
+) -> Union[ImageFont.FreeTypeFont, ImageFont.ImageFont]:
     path = os.path.join(FONTS_DIR, filename)
     if os.path.exists(path):
         return ImageFont.truetype(path, size)
@@ -23,8 +25,14 @@ def load_font(filename, size):
 
 
 def draw_blurred_text(
-    base_image, text, position, font, text_color, shadow_color, blur_radius=6
-):
+    base_image: Image.Image,
+    text: str,
+    position: Tuple[int, int],
+    font: Union[ImageFont.FreeTypeFont, ImageFont.ImageFont],
+    text_color: Union[str, Tuple[int, int, int]],
+    shadow_color: Union[str, Tuple[int, int, int, int]],
+    blur_radius: int = 6,
+) -> Image.Image:
     """Draws text with a blurred shadow (soft glow effect)."""
     shadow_layer = Image.new("RGBA", base_image.size, (0, 0, 0, 0))
     shadow_draw = ImageDraw.Draw(shadow_layer)
@@ -36,12 +44,10 @@ def draw_blurred_text(
     return base_image
 
 
-def create_playlist_cover(month_code: str, year: int, size: int = 640):
+def create_playlist_cover(month_code: str, year: int, size: int = 640) -> Image.Image:
     """Generate a square playlist cover image with month + year."""
-    # Pick a gradient preset
     top_color, bottom_color = random.choice(GRADIENT_PRESETS)
 
-    # Create gradient background
     gradient = Image.new("RGB", (size, size), "#000")
     for y in range(size):
         r = int(top_color[0] + (bottom_color[0] - top_color[0]) * y / size)
@@ -52,7 +58,6 @@ def create_playlist_cover(month_code: str, year: int, size: int = 640):
 
     image = gradient.convert("RGBA")
 
-    # Decorative translucent circles
     for _ in range(3):
         radius = random.randint(size // 3, size // 2)
         x = random.randint(-radius // 2, size - radius // 2)
@@ -62,16 +67,13 @@ def create_playlist_cover(month_code: str, year: int, size: int = 640):
         circle_draw.ellipse((x, y, x + radius, y + radius), fill=(255, 255, 255, 60))
         image = Image.alpha_composite(image, circle)
 
-    # Fonts
     month_font = load_font("Montserrat-Bold.ttf", size // 5)
     year_font = load_font("Montserrat-Bold.ttf", size // 7)
 
-    # Text positions
     padding = size // 12
     month_y = padding
     year_y = month_y + size // 4
 
-    # Draw Month with blurred shadow
     image = draw_blurred_text(
         image,
         month_code.upper(),
@@ -82,7 +84,6 @@ def create_playlist_cover(month_code: str, year: int, size: int = 640):
         blur_radius=6,
     )
 
-    # Draw Year with blurred shadow
     image = draw_blurred_text(
         image,
         str(year),
