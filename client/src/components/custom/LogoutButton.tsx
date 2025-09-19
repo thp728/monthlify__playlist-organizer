@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
+
 import { ErrorResponse } from "@/lib/types/api";
 
 export function LogoutButton() {
@@ -41,7 +43,10 @@ export function LogoutButton() {
 
   return (
     <Button variant="outline" onClick={handleLogout}>
-      Logout
+      <div className="flex items-center justify-center space-x-2 my-3">
+        <LogOut className="size-3 mr-2" />
+        <span>Logout</span>
+      </div>
     </Button>
   );
 }
