@@ -1,5 +1,6 @@
 "use client";
 
+import { Footer } from "@/components/custom/Footer";
 import { LogoutButton } from "@/components/custom/LogoutButton";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -28,8 +29,9 @@ export default function DashboardLayout({
       </header>
 
       {/* Main fills remaining height */}
-      <main className="flex items-center justify-center flex-1">
+      <main className="flex flex-col items-center justify-around flex-1">
         {children}
+        <Footer />
       </main>
     </section>
   );
