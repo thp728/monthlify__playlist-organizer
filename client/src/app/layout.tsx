@@ -1,5 +1,7 @@
 import "./globals.css";
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -11,6 +13,7 @@ export default function RootLayout({
         <main className="min-h-screen p-5 flex">
           <div className="bg-white p-3 rounded-lg shadow-lg w-full flex-1 text-center">
             {children}
+            <Toaster richColors position="top-center" />
           </div>
         </main>
       </body>

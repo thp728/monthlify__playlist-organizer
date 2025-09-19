@@ -9,11 +9,18 @@ import {
   SimplifiedPlaylist,
   UserProfile,
 } from "@/lib/types/api";
+import { toast } from "sonner";
+import { ErrorCard } from "@/components/custom/ErrorCard";
+import { ErrorState } from "@/lib/types/errorState";
 
 export default function DashboardPage() {
   const [userPlaylists, setUserPlaylists] = useState<SimplifiedPlaylist[]>([]);
   const [userName, setUserName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorState, setErrorState] = useState<ErrorState>({
+    isError: false,
+    error: null,
+  });
   const router = useRouter();
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -22,6 +29,8 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         setIsLoading(true);
+        setErrorState({ isError: false, error: null });
+
         // Fetch user playlists
         const playlistsResponse = await fetch(
           `${apiBaseUrl}/api/spotify/playlists`,
@@ -33,10 +42,20 @@ export default function DashboardPage() {
 
         if (!playlistsResponse.ok) {
           if (playlistsResponse.status === 401) {
+            toast.error("Your session has expired. Please log in again.");
             router.push("/");
+            return;
           }
           const data: ErrorResponse = await playlistsResponse.json();
-          throw new Error(data.error);
+          // Display a generic error for other non-401 API errors
+          toast.error(`Error loading playlists`);
+          console.error("Error loading playlists: ", data.error);
+          setErrorState({
+            isError: true,
+            error: data.error,
+          });
+          setIsLoading(false);
+          return;
         }
 
         const playlistsData: { playlists: SimplifiedPlaylist[] } =
@@ -62,10 +81,26 @@ export default function DashboardPage() {
           const fullName = userData.display_name;
           const firstName = fullName.split(" ")[0];
           setUserName(firstName);
+        } else {
+          toast.warning(
+            "Couldn't retrieve your display name. It may be a temporary issue."
+          );
         }
+
+        toast.success("Playlists loaded successfully!");
+
+        setIsLoading(false);
+        setErrorState({ isError: false, error: null });
       } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
+        console.error("Network error occurred:", error);
+        toast.error(
+          "A network error occurred. Please check your connection and try again."
+        );
+        setErrorState({
+          isError: true,
+          error:
+            "A network error occurred. Please check your connection and try again.",
+        });
         setIsLoading(false);
       }
     }
@@ -77,6 +112,18 @@ export default function DashboardPage() {
     return (
       <div className="min-h-full flex justify-center items-center">
         <LoadingSpinner loadingText="Loading Playlists..." />
+      </div>
+    );
+  }
+
+  if (errorState.isError) {
+    return (
+      <div className="min-h-full w-2/6 flex justify-center items-center">
+        <ErrorCard
+          errorTitle="Something Went Wrong"
+          errorMessage={errorState.error || "An unknown error occurred."}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }

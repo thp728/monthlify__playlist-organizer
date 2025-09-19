@@ -10,13 +10,15 @@ import {
   MonthlyTrack,
 } from "@/lib/types/api";
 import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
+import { toast } from "sonner";
+import { ErrorState } from "@/lib/types/errorState";
+import { ErrorCard } from "@/components/custom/ErrorCard";
 
 export default function PreviewPage() {
   const [previewData, setPreviewData] = useState<
     MonthlyPlaylistPreview[] | null
   >(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [previewPlaylists, setPreviewPlaylists] = useState<
     FrontendPreviewPlaylist[]
   >([]);
@@ -26,6 +28,10 @@ export default function PreviewPage() {
   const [sourceIdentifierType, setSourceIdentifierType] = useState<
     "id" | "url" | null
   >(null);
+  const [errorState, setErrorState] = useState<ErrorState>({
+    isError: false,
+    error: null,
+  });
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -34,6 +40,7 @@ export default function PreviewPage() {
     const type = searchParams.get("type");
 
     if (!identifier || (type !== "id" && type !== "url")) {
+      toast.error("Invalid playlist identifier or type. Please try again.");
       router.push("/dashboard");
       return;
     }
@@ -43,7 +50,7 @@ export default function PreviewPage() {
 
     const fetchPreviewData = async () => {
       setIsLoading(true);
-      setError(null);
+      setErrorState({ isError: false, error: null });
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/preview`, {
@@ -56,30 +63,40 @@ export default function PreviewPage() {
         });
 
         if (!response.ok) {
-          const errorData: ErrorResponse = await response.json();
-          throw new Error(
-            errorData.error || "Failed to fetch playlist preview."
-          );
+          const data: ErrorResponse = await response.json();
+          toast.error("Error generating preview");
+          console.error("Error generating preview: ", data.error);
+          router.push("/dashboard");
+          return;
         }
 
         const successData: { preview_data: MonthlyPlaylistPreview[] } =
           await response.json();
-        setPreviewData(successData.preview_data);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-          console.error(error);
+
+        if (successData.preview_data.length === 0) {
+          toast.info("No new songs found in this playlist to sort by month.");
         } else {
-          setError("An unknown error occurred.");
-          console.error(error);
+          toast.success("Preview generated successfully!");
         }
-      } finally {
+        setPreviewData(successData.preview_data);
+
         setIsLoading(false);
+        setErrorState({ isError: false, error: null });
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        toast.error(
+          "A network error occurred. Please check your connection and try again."
+        );
+        setErrorState({
+          isError: true,
+          error:
+            "A network error occurred. Please check your connection and try again.",
+        });
       }
     };
 
     fetchPreviewData();
-  }, [searchParams, router, apiBaseUrl, error]);
+  }, [searchParams, router, apiBaseUrl]);
 
   useEffect(() => {
     if (previewData) {
@@ -116,6 +133,18 @@ export default function PreviewPage() {
       generatePreviewPlaylists();
     }
   }, [previewData, apiBaseUrl]);
+
+  if (errorState.isError) {
+    return (
+      <div className="min-h-full w-2/6 flex justify-center items-center">
+        <ErrorCard
+          errorTitle="Something Went Wrong"
+          errorMessage={errorState.error || "An unknown error occurred."}
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
 
   return isLoading ? (
     <div className="w-full min-h-full flex justify-center items-center">

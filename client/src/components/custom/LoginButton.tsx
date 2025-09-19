@@ -2,9 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { SpotifyAuthResponse } from "@/lib/types/api";
+import { ErrorResponse, SpotifyAuthResponse } from "@/lib/types/api";
 import { Loader2 } from "lucide-react";
 import { FaSpotify } from "react-icons/fa";
+import { toast } from "sonner";
 
 export function LoginButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,17 +19,31 @@ export function LoginButton() {
         method: "GET",
         credentials: "include",
       });
+
+      if (!response.ok) {
+        const data: ErrorResponse = await response.json();
+        toast.error(`Login Error: Failed to get auth URL. Please try again`);
+        console.error("Login Error: ", data.error);
+        setIsLoading(false);
+        return;
+      }
+
       const data: SpotifyAuthResponse = await response.json();
 
       if (data.auth_url) {
         // Redirect the user to the Spotify authorization page
         window.location.href = data.auth_url;
       } else {
-        console.error("Failed to get auth URL from backend.");
+        toast.error(
+          "An unexpected error occurred. No authorization URL was provided."
+        );
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Error during login process:", error);
+      toast.error(
+        "A network error occurred. Please check your connection and try again."
+      );
       setIsLoading(false);
     }
   };

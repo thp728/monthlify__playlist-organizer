@@ -25,7 +25,7 @@ export function PlaylistCard({
   // Use a placeholder image if the URL is null or undefined
   const finalImageUrl = isLikedSongs
     ? "/images/liked-songs.png"
-    : albumCoverUrl || "https://placehold.co/400x400/png";
+    : albumCoverUrl || "https://placehold.co/640x640/png";
 
   return (
     <div

@@ -14,6 +14,9 @@ import { usePlaylistStore } from "@/store/playlistStore";
 import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
 import { CreatePlaylistsResponse, ErrorResponse } from "@/lib/types/api";
 import { PreviewPlaylistGrid } from "./PreviewPlaylistGrid";
+import { toast } from "sonner";
+import { ErrorCard } from "./ErrorCard";
+import { ErrorState } from "@/lib/types/errorState";
 
 interface PreviewProps {
   playlists: FrontendPreviewPlaylist[];
@@ -27,6 +30,10 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
     useState<FrontendPreviewPlaylist | null>(null);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorState, setErrorState] = useState<ErrorState>({
+    isError: false,
+    error: null,
+  });
 
   const setNewPlaylists = usePlaylistStore((state) => state.setNewPlaylists);
 
@@ -35,6 +42,8 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
   const createPlaylists = async () => {
     try {
       setIsLoading(true);
+      setErrorState({ isError: false, error: null });
+
       const response = await fetch(
         `${apiBaseUrl}/api/create-monthly-playlists`,
         {
@@ -52,17 +61,30 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
       );
 
       if (!response.ok) {
-        const errorData: ErrorResponse = await response.json();
-        throw new Error(errorData.error || "Failed to create playlists.");
+        const data: ErrorResponse = await response.json();
+        toast.error("Error creating playlists");
+        console.error("Error creating playlists: ", data.error);
+        router.push("/dashboard");
+        return;
       }
 
       const data: CreatePlaylistsResponse = await response.json();
       setNewPlaylists(data.playlists);
+      toast.success("Playlists processed successfully!");
       router.push("/dashboard/success");
-    } catch (error) {
-      console.error("Error creating playlists:", error);
-    } finally {
+
+      setErrorState({ isError: false, error: null });
       setIsLoading(false);
+    } catch (error) {
+      console.error("Network error occurred:", error);
+      toast.error(
+        "A network error occurred. Please check your connection and try again."
+      );
+      setErrorState({
+        isError: true,
+        error:
+          "A network error occurred. Please check your connection and try again.",
+      });
     }
   };
 
@@ -75,6 +97,18 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
   const changeMasterPlaylist = () => {
     router.push("/dashboard");
   };
+
+  if (errorState.isError) {
+    return (
+      <div className="min-h-full w-2/6 flex justify-center items-center">
+        <ErrorCard
+          errorTitle="Something Went Wrong"
+          errorMessage={errorState.error || "An unknown error occurred."}
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
 
   return isLoading ? (
     <div className="w-full min-h-full flex justify-center items-center">
