@@ -71,6 +71,9 @@ export function Preview({ playlists, identifier, type }: PreviewProps) {
       const data: CreatePlaylistsResponse = await response.json();
       setNewPlaylists(data.playlists);
       toast.success("Playlists processed successfully!");
+
+      usePlaylistStore.setState({ isCreationSuccessful: true });
+
       router.push("/dashboard/success");
 
       setErrorState({ isError: false, error: null });
