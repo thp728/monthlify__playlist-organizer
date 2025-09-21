@@ -15,13 +15,27 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
     null
   );
   const [urlInput, setUrlInput] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+
   const router = useRouter();
 
   const handleUrlInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUrlInput(e.target.value);
-    // Clear the selected playlist when the user starts typing in the URL input
+    const value = e.target.value;
+    setUrlInput(value);
+
     if (selectedPlaylistId) {
       setSelectedPlaylistId(null);
+    }
+  };
+
+  const handleBlur = () => {
+    const spotifyPlaylistRegex =
+      /^(https?:\/\/)?(open\.spotify\.com\/playlist\/|spotify:playlist:)[a-zA-Z0-9]+/;
+
+    if (urlInput === "" || spotifyPlaylistRegex.test(urlInput)) {
+      setError(null);
+    } else {
+      setError("Please enter a valid Spotify playlist URL");
     }
   };
 
@@ -95,12 +109,15 @@ export function Dashboard({ userPlaylists, userName }: DashboardProps) {
             placeholder="e.g., https://open.spotify.com/playlist/..."
             value={urlInput}
             onChange={handleUrlInputChange}
+            onBlur={handleBlur}
+            className={error ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
+          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
         </div>
 
         <Button
           onClick={handlePreview}
-          disabled={!selectedPlaylistId && urlInput.trim() === ""}
+          disabled={(!selectedPlaylistId && urlInput.trim() === "") || !!error}
         >
           Preview Monthly Playlists
         </Button>
