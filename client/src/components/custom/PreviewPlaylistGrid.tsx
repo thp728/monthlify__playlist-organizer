@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PlaylistCard } from "./PlaylistCard";
 import { Input } from "@/components/ui/input";
 import { FrontendPreviewPlaylist } from "@/lib/types/playlist";
+import { Search } from "lucide-react";
 
 interface PreviewPlaylistGridProps {
   playlists: FrontendPreviewPlaylist[];
@@ -29,13 +30,16 @@ export function PreviewPlaylistGrid({
       {/* Search Bar */}
       {isSearchEnabled && (
         <div className="flex justify-center">
-          <Input
-            className="w-4/6"
-            type="text"
-            placeholder="Search for a playlist..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className="relative w-4/6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search for a playlist..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10" // add padding-left so text doesn’t overlap with the icon
+            />
+          </div>
         </div>
       )}
 
